@@ -57,7 +57,7 @@ def create_dataset(start, stop, pool):
 
 
 def save_df(df):
-  PATH = "gdrive/MyDrive/collatz_dbs/"
+  PATH = "/data/collatz_dbs/"
   os.makedirs(PATH,exist_ok=True)
   FILENAME = 'collatz_db_' + time.strftime("%Y%m%d-%H%M%S_") + str(np.random.randint(1e3,1e9)) + '.parquet'
   file = os.path.join(PATH,FILENAME)
@@ -66,8 +66,8 @@ def save_df(df):
 
 def create_all(pool):
 
-    dist = int(1e4)
-    max_num = int(1e5)
+    dist = int(3e7)
+    max_num = int(1e10)
     start = 3
 
     for end in range(start,max_num,dist):
