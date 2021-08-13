@@ -1,6 +1,9 @@
 import sympy
 from sympy.ntheory import factorint
-
+import time
+import pandas as pd
+import os
+import numpy as np
 
 def collatz_serie(n: int) -> int:
     ret = [n]
@@ -44,3 +47,36 @@ def all_fancy_calculations(serie):
     calculations.append(sympy.isprime(num_in_question))  # is prime?
 
     return calculations
+
+SMALLEST_NUMBER = 3 # since we calculate the previous serie the smallest number is actually one smaller (should not go below 2 since the return value of the collatz could be an empty list)
+
+def create_dataset(start, stop, pool):
+    cz_series = pool.map(collatz_serie, range(start,stop+1))
+    dataset = pool.map(all_fancy_calculations, cz_series)
+    return pd.DataFrame(dataset)
+
+
+def save_df(df):
+  PATH = "gdrive/MyDrive/collatz_dbs/"
+  os.makedirs(PATH,exist_ok=True)
+  FILENAME = 'collatz_db_' + time.strftime("%Y%m%d-%H%M%S_") + str(np.random.randint(1e3,1e9)) + '.parquet'
+  file = os.path.join(PATH,FILENAME)
+  df.to_parquet(file)
+  print("Saved to", file)
+
+def create_all(pool):
+
+    dist = int(1e4)
+    max_num = int(1e5)
+    start = 3
+
+    for end in range(start,max_num,dist):
+      start_time = time.time()
+      print('## Going from ',start, "to",start + dist, "##")
+      df = create_dataset(start,start + dist,pool=pool)
+      df.columns = xheader
+      save_df(df)
+      start = start + dist
+      print("Iteration took", time.time()-start_time)
+
+    return df # just returns last df
