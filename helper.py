@@ -4,6 +4,8 @@ import time
 import pandas as pd
 import os
 import numpy as np
+from functools import partial
+
 
 def collatz_serie(n: int) -> int:
     ret = [n]
@@ -50,33 +52,40 @@ def all_fancy_calculations(serie):
 
 SMALLEST_NUMBER = 3 # since we calculate the previous serie the smallest number is actually one smaller (should not go below 2 since the return value of the collatz could be an empty list)
 
-def create_dataset(start, stop, pool):
-    cz_series = pool.map(collatz_serie, range(start,stop+1))
-    dataset = pool.map(all_fancy_calculations, cz_series)
+def create_dataset(start, stop):
+    dataset = []
+    for num in range(start,stop+1):
+        cz_series = collatz_serie(num)
+        dataset.append(all_fancy_calculations(cz_series))
     return pd.DataFrame(dataset)
 
 
-def save_df(df):
-  PATH = "/data/collatz_dbs/"
+def save_df(df, PATH):
+
   os.makedirs(PATH,exist_ok=True)
   FILENAME = 'collatz_db_' + time.strftime("%Y%m%d-%H%M%S_") + str(np.random.randint(1e3,1e9)) + '.parquet'
   file = os.path.join(PATH,FILENAME)
   df.to_parquet(file)
   print("Saved to", file)
 
-def create_all(pool):
 
-    dist = int(3e7)
-    max_num = int(1e10)
+def create_dataframe(working_range, path):
+    start_time = time.time()
+    print('## Going from ', working_range[0], "to", working_range[1], "##")
+    df = create_dataset(working_range[0], working_range[1])
+    df.columns = xheader
+    save_df(df, path)
+    print("Iteration took", time.time() - start_time)
+
+def create_all(pool,path):
+
+    dist = int(5e5)
+    max_num = int(5e6)
     start = 3
 
-    for end in range(start,max_num,dist):
-      start_time = time.time()
-      print('## Going from ',start, "to",start + dist, "##")
-      df = create_dataset(start,start + dist,pool=pool)
-      df.columns = xheader
-      save_df(df)
-      start = start + dist
-      print("Iteration took", time.time()-start_time)
+    working_range = [[i,i+dist] for i in range(start,max_num,dist)]
+    funct = partial(create_dataframe, path=path)
+    results = pool.map(funct, working_range)
 
-    return df # just returns last df
+
+    return # just returns last df
