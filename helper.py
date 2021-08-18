@@ -79,8 +79,8 @@ def create_dataframe(working_range, path):
 
 def create_all(pool,path):
 
-    dist = int(5e5)
-    max_num = int(5e6)
+    dist = int(1e7)
+    max_num = int(1e10)
     start = 3
 
     working_range = [[i,i+dist] for i in range(start,max_num,dist)]
